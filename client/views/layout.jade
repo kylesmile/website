@@ -1,0 +1,25 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width")
+    link(rel="stylesheet" href="assets/styles/application.css")
+    title The Official Online Presence of Kyle Smith
+
+  body
+    header
+      .title
+        img.me-image(src="assets/images/avatar.jpg")
+        h1 Kyle Smith
+
+      nav
+        a.is-selected(href="/") Home
+        a(href="/blog") Blog
+        a(href="/about") About
+        
+    main
+      block content
+
+    footer
+      small Copyright © 2015 Kyle Smith. All Rights Reserved.
+  
