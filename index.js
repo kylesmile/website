@@ -25,7 +25,7 @@ app.use('/assets/styles', sassMiddleware({
 }));
 app.use('/assets/images', express.static(path.join(__dirname, 'client', 'images')));
 
-let pages = { home: '/', blog: '/blog', about: '/about' }
+let pages = { home: '/', blog: '/blog', about: '/about' };
 for (let page in pages) {
   let path = pages[page];
   app.get(path, (req, res) => {
