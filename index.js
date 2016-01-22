@@ -25,13 +25,20 @@ app.use('/assets/styles', sassMiddleware({
 }));
 app.use('/assets/images', express.static(path.join(__dirname, 'client', 'images')));
 
-let pages = { home: '/', blog: '/blog', about: '/about' };
-for (let page in pages) {
-  let path = pages[page];
-  app.get(path, (req, res) => {
-    res.render(page);
+app.get('/', (req, res) => res.render('home'));
+app.get('/about', (req, res) => res.render('about'));
+
+const BlogPost = require('./server/BlogPost');
+const MongoClient = require('mongodb').MongoClient;
+app.get('/blog', (req, res) => {
+  MongoClient.connect('mongodb://localhost:27017/my_website').then((db) => {
+    let posts = db.collection('blogPosts').find().map((p) => new BlogPost(p)).toArray().then((posts) => {
+      res.render('blog', { posts: posts });
+    });
+  }).catch((error) => {
+    console.log(error);
   });
-}
+});
 
 app.use((req, res, next) => {
   let error = new Error('Not Found');
