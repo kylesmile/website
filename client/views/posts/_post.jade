@@ -1,0 +1,7 @@
+article
+  a.post-title(href="/posts/" + post.id())
+    h1.title= post.title()
+  != post.body()
+  .actions
+    a.edit-post(href="/posts/" + post.id() + "/edit") Edit
+    button.delete(data-resource="/posts/" + post.id()) Delete

@@ -2,5 +2,7 @@
   "esversion": 6,
   "undef": true,
   "node": true,
-  "loopfunc": true
+  "browser": true,
+  "loopfunc": true,
+  "asi": true
 }

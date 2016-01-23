@@ -4,8 +4,11 @@ const http = require('http');
 const express = require('express');
 const path = require('path');
 const sassMiddleware = require('node-sass-middleware'); // TODO: Replace this. WAY too many dependencies
+const bodyParser = require('body-parser');
 
 const config = require('./config');
+
+const webpack = require('webpack');
 
 const app = express();
 
@@ -25,22 +28,92 @@ app.use('/assets/styles', sassMiddleware({
 }));
 app.use('/assets/images', express.static(path.join(__dirname, 'client', 'images')));
 
-app.get('/', (req, res) => res.render('home'));
-app.get('/about', (req, res) => res.render('about'));
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get('/', (request, response) => response.render('home'));
+app.get('/about', (request, response) => response.render('about'));
 
 const BlogPost = require('./server/BlogPost');
-const MongoClient = require('mongodb').MongoClient;
-app.get('/blog', (req, res) => {
-  MongoClient.connect('mongodb://localhost:27017/my_website').then((db) => {
-    let posts = db.collection('blogPosts').find().map((p) => new BlogPost(p)).toArray().then((posts) => {
-      res.render('blog', { posts: posts });
-    });
-  }).catch((error) => {
-    console.log(error);
-  });
+const mongodb = require('mongodb');
+const MongoClient = mongodb.MongoClient;
+const ObjectId = mongodb.ObjectId;
+
+app.get('/blog', (request, response, next) => {
+  BlogPost.find()
+    .then(posts => response.render('blog', { posts: posts }))
+    .catch(error => next(error));
 });
 
-app.use((req, res, next) => {
+app.get('/posts/new', (request, response) => {
+  response.render('posts/new');
+});
+
+app.get('/posts/:id/edit', (request, response, next) => {
+  BlogPost.findOne({ _id: new ObjectId(request.params.id) })
+    .then(post => response.render('posts/edit', { post: post }))
+    .catch(error => next(error));
+});
+
+app.get('/posts/:id', (request, response, next) => {
+  BlogPost.findOne({ _id: new ObjectId(request.params.id) })
+    .then(post => response.render('posts/show', { post: post }))
+    .catch(error => next(error));
+});
+
+app.post('/posts/:id', (request, response, next) => {
+  BlogPost.findOne({ _id: new ObjectId(request.params.id) }).then(post => {
+      post.setTitle(request.body.title);
+      post.setBody(request.body.body);
+      return post.save();
+    }).then(post => response.redirect(`/posts/${post.id()}`))
+      .catch(error => next(error));
+});
+
+app.delete('/posts/:id', (request, response, next) => {
+  BlogPost.findOne({ _id: new ObjectId(request.params.id) })
+    .then(post => post.delete())
+    .then(() => response.send('{ "redirect": "/blog" }'))
+    .catch((error) => next(error));
+});
+
+app.post('/posts', (request, response, next) => {
+  let title = request.body.title;
+  let body = request.body.body;
+
+  let post = new BlogPost({ title: title, body: body });
+  post.save().then(post => {
+    response.redirect(`/posts/${post.id()}`);
+  }).catch(error => next(error));
+});
+
+webpack({
+  entry: path.join(__dirname, 'client', 'javascripts', 'application.js'),
+  output: {
+    filename: 'application.js',
+    path: path.join(__dirname, 'tmp', 'public', 'javascripts')
+  },
+  debug: config.debug,
+  devtool: 'inline-source-map',
+  module: {
+    loaders: [
+      {
+        loader: 'babel',
+        query: {
+          presets: ['es2015']
+        }
+      }
+    ]
+  }
+}, function(error, stats) {
+  if (error) return console.log(error);
+
+  let jsonStats = stats.toJson();
+  if (jsonStats.errors.length > 0) return console.log(jsonStats.errors);
+  if (jsonStats.warnings.length > 0) console.log(jsonStats.warnings);
+});
+app.use('/assets/javascripts', express.static(path.join(__dirname, 'tmp', 'public', 'javascripts')));
+
+app.use((request, response, next) => {
   let error = new Error('Not Found');
   error.status = 404;
   next(error);
@@ -48,10 +121,11 @@ app.use((req, res, next) => {
 
 // Show full error message in development
 if (config.debug === true) {
-  app.use((err, req, res, next) => {
+  app.use((err, request, response, next) => {
+    console.log(err);
     let status = err.status || 500;
-    res.status(status);
-    res.render('error', {
+    response.status(status);
+    response.render('error', {
       message: err.message,
       error: err,
       status
@@ -60,10 +134,10 @@ if (config.debug === true) {
 }
 
 // Only show error messages in production
-app.use((err, req, res, next) => {
+app.use((err, request, response, next) => {
   let status = err.status || 500;
-  res.status(status);
-  res.render('error', {
+  response.status(status);
+  response.render('error', {
     message: err.message,
     error: {},
     status

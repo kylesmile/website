@@ -1,0 +1,9 @@
+extends ../layout
+
+block content
+  section.post-form
+    h1 Edit Post
+    form(action="/posts/"+post.id() method="post")
+      input(type="text" name="title" value=post.title())
+      textarea(name="body")= post.body()
+      button(type="submit") Update

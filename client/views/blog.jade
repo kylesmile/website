@@ -2,7 +2,6 @@ extends layout
 
 block content
   section.blog
+    a.new-post(href="/posts/new") New Post
     each post in posts
-      article
-        h1.title= post.title()
-        != post.body()
+      include posts/_post

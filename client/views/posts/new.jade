@@ -1,0 +1,9 @@
+extends ../layout
+
+block content
+  section.post-form
+    h1 New Post
+    form(action="/posts" method="post")
+      input(type="text" name="title")
+      textarea(name="body")
+      button(type="submit") Create
