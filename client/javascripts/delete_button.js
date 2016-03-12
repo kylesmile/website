@@ -1,4 +1,4 @@
-import PromisedRequest from './PromisedRequest'
+import PromisedRequest from './promised_request'
 
 export default class DeleteButton {
   constructor(element) {

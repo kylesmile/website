@@ -10,7 +10,46 @@ const config = require('./config');
 
 const webpack = require('webpack');
 
+const sessions = require('client-sessions');
+
 const app = express();
+
+app.use(sessions({
+  cookieName: 'session',
+  secret: 'supersecret', // TODO: make this secure
+  duration: 2*24*60*60*1000,
+  activeDuration: 1000 * 60 * 5
+}));
+
+const Session = require('./server/session');
+
+app.use((request, response, next) => {
+  if (request.session.token) {
+    Session.findByToken(request.session.token).then(session => {
+      request.currentSession = session;
+      if (session.userId()) {
+        session.user().then(user => {
+          request.currentUser = user;
+          next();
+        });
+      } else {
+        next();
+      }
+    }).catch(error => next(error));
+  } else {
+    next();
+  }
+});
+
+app.use((request, response, next) => {
+  let userId;
+  if (request.currentUser) userId = request.currentUser.id();
+  let nextSession = new Session({ relevantData: request.ip, userId: userId });
+  nextSession.save().then(session => {
+    request.session.token = session.token();
+    next();
+  }).catch(error => next(error));
+});
 
 app.set('views', path.join(__dirname, 'client', 'views'));
 app.set('view engine', 'jade');
@@ -31,16 +70,40 @@ app.use('/assets/images', express.static(path.join(__dirname, 'client', 'images'
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (request, response) => response.render('home'));
+
+const User = require('./server/user');
+let userId;
+
+app.get('/sign_in', (request, response) => response.render('sign_in'));
+app.post('/sessions', (request, response, next) => {
+  User.findOne({ email: request.body.email }).then(user => {
+    if (user) {
+      userId = user.id();
+      return user.checkPassword(request.body.password);
+    } else {
+      response.render('sign_in');
+    }
+  }).then(isCorrectPassword => {
+    if (isCorrectPassword) {
+      return new Session({ userId: userId, relevantData: request.ip }).save();
+    } else {
+      response.render('sign_in');
+    }
+  }).then(session => {
+    request.session.token = session.token();
+    response.redirect('/');
+  }).catch(error => next(error));
+});
+
 app.get('/about', (request, response) => response.render('about'));
 
-const BlogPost = require('./server/BlogPost');
+const BlogPost = require('./server/blog_post');
 const mongodb = require('mongodb');
-const MongoClient = mongodb.MongoClient;
 const ObjectId = mongodb.ObjectId;
 
 app.get('/blog', (request, response, next) => {
   BlogPost.find()
-    .then(posts => response.render('blog', { posts: posts }))
+    .then(posts => response.render('blog', { posts: posts, currentUser: request.currentUser }))
     .catch(error => next(error));
 });
 

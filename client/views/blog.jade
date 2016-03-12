@@ -2,6 +2,7 @@ extends layout
 
 block content
   section.blog
-    a.new-post(href="/posts/new") New Post
+    if currentUser
+      a.new-post(href="/posts/new") New Post
     each post in posts
       include posts/_post
