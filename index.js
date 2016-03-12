@@ -6,49 +6,47 @@ const path = require('path');
 const sassMiddleware = require('node-sass-middleware'); // TODO: Replace this. WAY too many dependencies
 const bodyParser = require('body-parser');
 
-const config = require('./config');
+const env = require('./config');
 
 const webpack = require('webpack');
 
-const sessions = require('client-sessions');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
-app.use(sessions({
-  cookieName: 'session',
-  secret: 'supersecret', // TODO: make this secure
-  duration: 2*24*60*60*1000,
-  activeDuration: 1000 * 60 * 5
-}));
+app.use(cookieParser(env.sessionSecret));
 
 const Session = require('./server/session');
 
 app.use((request, response, next) => {
-  if (request.session.token) {
-    Session.findByToken(request.session.token).then(session => {
-      request.currentSession = session;
-      if (session.userId()) {
-        session.user().then(user => {
-          request.currentUser = user;
+  if (request.signedCookies.sessionToken) {
+    Session.findByToken(request.signedCookies.sessionToken).then(session => {
+      if (session) {
+        response.cookie('sessionToken', session.token(), { maxAge: env.sessionExpiration, signed: true });
+        response.locals.currentSession = session;
+        if (session.userId()) {
+          return session.user().then(user => {
+            response.locals.currentUser = user;
+            next();
+          });
+        } else {
+          next();
+        }
+      } else {
+        return new Session({ relevantData: request.ip }).save().then(session => {
+          response.cookie('sessionToken', session.token(), { maxAge: env.sessionExpiration, signed: true });
+          response.locals.currentSession = session;
           next();
         });
-      } else {
-        next();
       }
     }).catch(error => next(error));
   } else {
-    next();
+    new Session({ relevantData: request.ip }).save().then(session => {
+      response.cookie('sessionToken', session.token(), { maxAge: env.sessionExpiration, signed: true });
+      response.locals.currentSession = session;
+      next();
+    }).catch(error => next(error));
   }
-});
-
-app.use((request, response, next) => {
-  let userId;
-  if (request.currentUser) userId = request.currentUser.id();
-  let nextSession = new Session({ relevantData: request.ip, userId: userId });
-  nextSession.save().then(session => {
-    request.session.token = session.token();
-    next();
-  }).catch(error => next(error));
 });
 
 app.set('views', path.join(__dirname, 'client', 'views'));
@@ -58,7 +56,7 @@ app.use('/assets/styles', sassMiddleware({
   src: path.join(__dirname, 'client', 'styles'),
   dest: path.join(__dirname, 'tmp', 'public', 'styles'),
   response: true,
-  debug: config.debug,
+  debug: env.debug,
   outputStyle: 'compressed',
   prefix: '/assets/styles',
   error: (error) => {
@@ -86,12 +84,16 @@ app.post('/sessions', (request, response, next) => {
   }).then(isCorrectPassword => {
     if (isCorrectPassword) {
       return new Session({ userId: userId, relevantData: request.ip }).save();
-    } else {
+    } else if (!response.headersSent) {
       response.render('sign_in');
     }
   }).then(session => {
-    request.session.token = session.token();
-    response.redirect('/');
+    if (session) {
+      response.locals.currentSession.delete().then(() => {
+        response.cookie('sessionToken', session.token(), { maxAge: env.sessionExpiration, signed: true });
+        response.redirect('/');
+      }).catch(error => next(error));
+    }
   }).catch(error => next(error));
 });
 
@@ -103,7 +105,7 @@ const ObjectId = mongodb.ObjectId;
 
 app.get('/blog', (request, response, next) => {
   BlogPost.find()
-    .then(posts => response.render('blog', { posts: posts, currentUser: request.currentUser }))
+    .then(posts => response.render('blog', { posts: posts }))
     .catch(error => next(error));
 });
 
@@ -155,7 +157,7 @@ webpack({
     filename: 'application.js',
     path: path.join(__dirname, 'tmp', 'public', 'javascripts')
   },
-  debug: config.debug,
+  debug: env.debug,
   devtool: 'inline-source-map',
   module: {
     loaders: [
@@ -183,9 +185,10 @@ app.use((request, response, next) => {
 });
 
 // Show full error message in development
-if (config.debug === true) {
+if (env.debug === true) {
   app.use((err, request, response, next) => {
-    console.log(err);
+    console.log(err.message);
+    console.log(err.stack);
     let status = err.status || 500;
     response.status(status);
     response.render('error', {
@@ -198,6 +201,8 @@ if (config.debug === true) {
 
 // Only show error messages in production
 app.use((err, request, response, next) => {
+  console.log(err.message);
+  console.log(err.stack);
   let status = err.status || 500;
   response.status(status);
   response.render('error', {
@@ -212,7 +217,7 @@ function onError(error) {
     throw error;
   }
 
-  let bind = 'Port ' + config.port;
+  let bind = 'Port ' + env.port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -229,6 +234,6 @@ function onError(error) {
   }
 }
 
-app.listen(config.port, () => {
-  console.log(`Listening on ${config.port}`);
+app.listen(env.port, () => {
+  console.log(`Listening on ${env.port}`);
 });

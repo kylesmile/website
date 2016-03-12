@@ -19,7 +19,7 @@ module.exports = class User extends mongoModel.Model {
   }
 
   passwordUpdated() {
-    return Boolean(this._passwordUpdated);
+    return Boolean(this._passwordUpdated) || this.hashedPassword() === undefined;
   }
 
   checkPassword(candidatePassword) {
