@@ -1,0 +1,16 @@
+extends ../layout
+
+block content
+  section.account-form
+    h1 Account
+    form(action="/account" method="post")
+      label(for="email") Email
+      input(type="text" name="email" value=currentUser.email())
+
+      label(for="password") Password
+      input(type="password" name="password")
+
+      label(for="password_confirmation") Confirm Password
+      input(type="password" name="password_confirmation")
+
+      button(type="submit") Update

@@ -97,6 +97,36 @@ app.post('/sessions', (request, response, next) => {
   }).catch(error => next(error));
 });
 
+app.post('/sign_out', (request, response, next) => {
+  response.locals.currentSession.delete().then(() => {
+    response.send('{ "redirect": "/" }');
+  }).catch(error => next(error));
+});
+
+app.get('/account', (request, response) => {
+  response.render('users/edit');
+});
+
+app.post('/account', (request, response, next) => {
+  if (response.locals.currentUser) {
+    let password = request.body.password;
+    let passwordConfirmation = request.body.password_confirmation;
+    let email = request.body.email;
+
+    response.locals.currentUser.setEmail(email);
+
+    if (password && passwordConfirmation && password === passwordConfirmation) {
+      response.locals.currentUser.setPassword(password);
+    }
+
+    response.locals.currentUser.save().then(() => {
+      response.redirect('/account');
+    }).catch(error => next(error));
+  } else {
+    response.redirect('/');
+  }
+});
+
 app.get('/about', (request, response) => response.render('about'));
 
 const BlogPost = require('./server/blog_post');

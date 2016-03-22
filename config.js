@@ -33,7 +33,7 @@ if (fs.existsSync(`./config.${env.nodeEnv}.js`)) {
 merge(env, {
   debug: false,
   port: +process.env.PORT || 3000,
-  sessionExpiration: 60*1000
+  sessionExpiration: 60*60*24*1000
 });
 
 let requiredEnv = ['dbHost', 'dbPort', 'dbName', 'sessionSecret'];

@@ -6,4 +6,12 @@ footer {
   small {
     color: #ddd;
   }
+
+  .session-actions {
+    float: right;
+
+    a {
+      margin: 0.5em;
+    }
+  }
 }

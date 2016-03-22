@@ -23,4 +23,7 @@ html
 
     footer
       small Copyright © 2015 Kyle Smith. All Rights Reserved.
-  
+      if currentUser
+        .session-actions
+          a(href="/account") Account
+          a(href="/sign_out" data-method="post") Sign out
