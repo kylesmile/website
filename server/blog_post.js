@@ -1,8 +1,8 @@
 'use strict';
 
-const mongoModel = require('mongo_model');
+const classyMongo = require('classy-mongo');
 
-module.exports = class BlogPost extends mongoModel.Model {
+module.exports = class BlogPost extends classyMongo.Model {
   static defineSchema(schema) {
     schema.field('title');
     schema.field('body');

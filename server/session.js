@@ -1,10 +1,10 @@
 "use strict";
 
-const mongoModel = require('mongo_model');
+const classyMongo = require('classy-mongo');
 const crypto = require('crypto');
 const User = require('./user');
 
-module.exports = class Session extends mongoModel.Model {
+module.exports = class Session extends classyMongo.Model {
   static findByToken(token) {
     return this.findOne({ token: token });
   }

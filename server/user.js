@@ -1,9 +1,9 @@
 'use strict';
 
-const mongoModel = require('mongo_model');
+const classyMongo = require('classy-mongo');
 const bcrypt = require('bcrypt');
 
-module.exports = class User extends mongoModel.Model {
+module.exports = class User extends classyMongo.Model {
   static defineSchema(schema) {
     schema.field('email');
     schema.field('hashedPassword');

@@ -1,5 +1,5 @@
 'use strict';
-const Connection = require('mongo_model').Connection;
+const Connection = require('classy-mongo').Connection;
 const fs = require('fs');
 
 function camelize(envString) {
@@ -25,9 +25,9 @@ function merge(object1, object2) {
 }
 
 let env = dupEnv(process.env);
-env.NODE_ENV = env.NODE_ENV || 'development';
-if (fs.existsSync(`./config.${env.NODE_ENV}.js`)) {
-  merge(env, require(`./config.${env.NODE_ENV}.js`));
+env.nodeEnv = env.nodeEnv || 'development';
+if (fs.existsSync(`./config.${env.nodeEnv}.js`)) {
+  merge(env, require(`./config.${env.nodeEnv}.js`));
 }
 
 merge(env, {
