@@ -11,7 +11,17 @@ footer {
     float: right;
 
     a {
+      color: #ddd;
+      text-decoration: none;
       margin: 0.5em;
+
+      &:visited {
+        color: #ddd;
+      }
+
+      &:hover {
+        color: #ccc;
+      }
     }
   }
 }
