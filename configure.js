@@ -25,7 +25,9 @@ module.exports = {
   dbHost: '${options.dbHost}',
   dbPort: '${options.dbPort}',
   dbName: '${options.dbName}',
-  sessionSecret: '${generateSecret()}'
+  sessionSecret: '${generateSecret()}',
+  defaultUserEmail: '${options.defaultUserEmail}',
+  defaultUserPassword: '${options.defaultUserPassword}'
 }
   `.trim();
 

@@ -1,16 +1,40 @@
 "use strict";
 
+const env = require('./config');
+
 const http = require('http');
 const express = require('express');
 const path = require('path');
 const sassMiddleware = require('node-sass-middleware'); // TODO: Replace this. WAY too many dependencies
 const bodyParser = require('body-parser');
 
-const env = require('./config');
-
+const ObjectId = require('mongodb').ObjectId;
 const webpack = require('webpack');
-
 const cookieParser = require('cookie-parser');
+
+const BlogPost = require('./server/blog_post');
+const User = require('./server/user');
+
+User.collection().then(collection => {
+  return collection.count();
+}).then(count => {
+  if (count === 0) {
+    console.log('No users exist');
+    if (env.defaultUserEmail && env.defaultUserPassword) {
+      console.log('Creating user based on specified environment variables');
+      let user = new User({ email: env.defaultUserEmail, password: env.defaultUserPassword });
+      user.save().catch(error => {
+        console.log('Unable to create default user');
+        console.log(error);
+      });
+    } else {
+      console.log('Define DEFAULT_USER_EMAIL and DEFAULT_USER_PASSWORD to automatically create one');
+    }
+  }
+}).catch(error => {
+  console.log('Could not count users');
+  console.log(error);
+});
 
 const app = express();
 
@@ -69,11 +93,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (request, response) => response.render('home'));
 
-const User = require('./server/user');
-let userId;
-
 app.get('/sign_in', (request, response) => response.render('sign_in'));
 app.post('/sessions', (request, response, next) => {
+  let userId;
   User.findOne({ email: request.body.email }).then(user => {
     if (user) {
       userId = user.id();
@@ -128,10 +150,6 @@ app.post('/account', (request, response, next) => {
 });
 
 app.get('/about', (request, response) => response.render('about'));
-
-const BlogPost = require('./server/blog_post');
-const mongodb = require('mongodb');
-const ObjectId = mongodb.ObjectId;
 
 app.get('/blog', (request, response, next) => {
   BlogPost.find()
