@@ -1,0 +1,99 @@
+---
+- name: Install git
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Install build-essential
+  apt:
+    name: build-essential
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Install libkrb5-dev
+  apt:
+    name: libkrb5-dev
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Ensure web group exists
+  group:
+    name: web
+    state: present
+  become: yes
+
+- name: Add website user
+  user:
+    name: website
+    state: present
+    group: web
+  become: yes
+
+- name: Create /srv/website directory
+  file:
+    path: /srv/website
+    state: directory
+    mode: u=rwx,g=rx,o-rwx
+    owner: website
+    group: web
+  become: yes
+
+- name: Clone website repo
+  git:
+    repo: https://github.com/kylesmile/website.git
+    dest: /srv/website
+    force: yes
+  become: yes
+  become_user: website
+
+- name: Install node-gyp
+  npm:
+    name: node-gyp
+    global: yes
+    state: present
+  become: yes
+
+- name: Run npm install
+  npm:
+    path: /srv/website
+    production: yes
+  become: yes
+  become_user: website
+
+- name: Configure the app
+  command: node configure.js '{"dbHost":"localhost", "dbPort":"27017", "dbName":"website", "defaultUserEmail":"{{ email }}", "defaultUserPassword":"{{ password }}"}'
+  args:
+    chdir: /srv/website
+    creates: /srv/website/config.production.js
+  become: yes
+  become_user: website
+
+- name: Create website log file
+  file:
+    path: /var/log/website.log
+    state: touch
+    owner: website
+  become: yes
+
+- name: Set up website service
+  file:
+    src: /srv/website/website.conf
+    dest: /etc/init/website.conf
+    state: link
+  become: yes
+
+- name: Notify Upstart of new service
+  command: initctl reload-configuration
+  become: yes
+
+# NOTE: This does not run the server as root! The service command needs to be run as root.
+# The server will be run as the "website" user
+- name: Start website server
+  service:
+    name: website
+    state: restarted
+  become: yes
