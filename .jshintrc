@@ -4,5 +4,6 @@
   "node": true,
   "browser": true,
   "loopfunc": true,
-  "asi": true
+  "asi": true,
+  "jasmine": true
 }
