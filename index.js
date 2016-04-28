@@ -74,7 +74,7 @@ app.use((request, response, next) => {
 });
 
 app.set('views', path.join(__dirname, 'client', 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 app.use('/assets/styles', sassMiddleware({
   src: path.join(__dirname, 'client', 'styles'),

@@ -17,10 +17,8 @@
     "classy-mongo": "github:kylesmile/classy-mongo",
     "cookie-parser": "^1.4.1",
     "express": "~4.13.1",
-    "jade": "~1.11.0",
-    "kerberos": "0.0.19",
-    "mongodb": "^2.1.4",
     "node-sass-middleware": "^0.9.7",
+    "pug": "^2.0.0-alpha6",
     "webpack": "^1.12.11"
   },
   "devDependencies": {
