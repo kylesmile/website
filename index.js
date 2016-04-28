@@ -2,6 +2,10 @@
 
 const env = require('./config');
 
+const Logger = require('./server/logger');
+const logger = new Logger();
+logger.log("Starting server");
+
 const http = require('http');
 const express = require('express');
 const path = require('path');
@@ -14,33 +18,37 @@ const cookieParser = require('cookie-parser');
 
 const BlogPost = require('./server/blog_post');
 const User = require('./server/user');
+const Session = require('./server/session');
 
 User.collection().then(collection => {
   return collection.count();
 }).then(count => {
   if (count === 0) {
-    console.log('No users exist');
+    logger.log("No users exist")
     if (env.defaultUserEmail && env.defaultUserPassword) {
-      console.log('Creating user based on specified environment variables');
+      logger.log('Creating user based on specified environment variables');
       let user = new User({ email: env.defaultUserEmail, password: env.defaultUserPassword });
       user.save().catch(error => {
-        console.log('Unable to create default user');
-        console.log(error);
+        logger.log('Unable to create default user');
+        logger.error(error);
       });
     } else {
-      console.log('Define DEFAULT_USER_EMAIL and DEFAULT_USER_PASSWORD to automatically create one');
+      logger.log('Define DEFAULT_USER_EMAIL and DEFAULT_USER_PASSWORD to automatically create one');
     }
   }
 }).catch(error => {
-  console.log('Could not count users');
-  console.log(error);
+  logger.log('Could not count users');
+  logger.error(error);
 });
 
 const app = express();
 
 app.use(cookieParser(env.sessionSecret));
 
-const Session = require('./server/session');
+app.use((request, response, next) => {
+  request.logger = logger.tagged(request.ip);
+  next();
+});
 
 app.use((request, response, next) => {
   if (request.signedCookies.sessionToken) {
@@ -63,14 +71,23 @@ app.use((request, response, next) => {
           next();
         });
       }
-    }).catch(error => next(error));
+    }).catch(next);
   } else {
     new Session({ relevantData: request.ip }).save().then(session => {
       response.cookie('sessionToken', session.token(), { maxAge: env.sessionExpiration, signed: true });
       response.locals.currentSession = session;
       next();
-    }).catch(error => next(error));
+    }).catch(next);
   }
+});
+
+app.use((request, response, next) => {
+  request.logger.addTag(`Session: ${response.locals.currentSession.id()}`);
+  if (response.locals.currentUser) {
+    request.logger.addTag(`User: ${response.locals.currentUser.email()}`);
+  }
+  request.logger.log(`${request.method} ${request.url}`);
+  next();
 });
 
 app.set('views', path.join(__dirname, 'client', 'views'));
@@ -84,7 +101,7 @@ app.use('/assets/styles', sassMiddleware({
   outputStyle: 'compressed',
   prefix: '/assets/styles',
   error: (error) => {
-    console.log(error);
+    logger.log(error);
   }
 }));
 app.use('/assets/images', express.static(path.join(__dirname, 'client', 'images')));
@@ -95,6 +112,7 @@ app.get('/', (request, response) => response.render('home'));
 
 app.get('/sign_in', (request, response) => response.render('sign_in'));
 app.post('/sessions', (request, response, next) => {
+  request.logger.log(`Attempting to sign in as ${request.body.email}`);
   let userId;
   User.findOne({ email: request.body.email }).then(user => {
     if (user) {
@@ -105,6 +123,7 @@ app.post('/sessions', (request, response, next) => {
     }
   }).then(isCorrectPassword => {
     if (isCorrectPassword) {
+      request.logger.log(`Successfully signed in as ${request.body.email}`);
       return new Session({ userId: userId, relevantData: request.ip }).save();
     } else if (!response.headersSent) {
       response.render('sign_in');
@@ -114,15 +133,16 @@ app.post('/sessions', (request, response, next) => {
       response.locals.currentSession.delete().then(() => {
         response.cookie('sessionToken', session.token(), { maxAge: env.sessionExpiration, signed: true });
         response.redirect('/');
-      }).catch(error => next(error));
+      }).catch(next);
     }
-  }).catch(error => next(error));
+  }).catch(next);
 });
 
 app.post('/sign_out', (request, response, next) => {
   response.locals.currentSession.delete().then(() => {
+    request.logger.log('Successfully logged out');
     response.send('{ "redirect": "/" }');
-  }).catch(error => next(error));
+  }).catch(next);
 });
 
 app.get('/account', (request, response) => {
@@ -131,6 +151,7 @@ app.get('/account', (request, response) => {
 
 app.post('/account', (request, response, next) => {
   if (response.locals.currentUser) {
+    request.logger.log('Updating user');
     let password = request.body.password;
     let passwordConfirmation = request.body.password_confirmation;
     let email = request.body.email;
@@ -138,12 +159,13 @@ app.post('/account', (request, response, next) => {
     response.locals.currentUser.setEmail(email);
 
     if (password && passwordConfirmation && password === passwordConfirmation) {
+      request.logger.log('Updated user password');
       response.locals.currentUser.setPassword(password);
     }
 
     response.locals.currentUser.save().then(() => {
       response.redirect('/account');
-    }).catch(error => next(error));
+    }).catch(next);
   } else {
     response.redirect('/');
   }
@@ -154,7 +176,7 @@ app.get('/about', (request, response) => response.render('about'));
 app.get('/blog', (request, response, next) => {
   BlogPost.find()
     .then(posts => response.render('blog', { posts: posts }))
-    .catch(error => next(error));
+    .catch(next);
 });
 
 app.get('/posts/new', (request, response) => {
@@ -164,13 +186,13 @@ app.get('/posts/new', (request, response) => {
 app.get('/posts/:id/edit', (request, response, next) => {
   BlogPost.findOne({ _id: new ObjectId(request.params.id) })
     .then(post => response.render('posts/edit', { post: post }))
-    .catch(error => next(error));
+    .catch(next);
 });
 
 app.get('/posts/:id', (request, response, next) => {
   BlogPost.findOne({ _id: new ObjectId(request.params.id) })
     .then(post => response.render('posts/show', { post: post }))
-    .catch(error => next(error));
+    .catch(next);
 });
 
 app.post('/posts/:id', (request, response, next) => {
@@ -178,15 +200,19 @@ app.post('/posts/:id', (request, response, next) => {
       post.setTitle(request.body.title);
       post.setBody(request.body.body);
       return post.save();
-    }).then(post => response.redirect(`/posts/${post.id()}`))
-      .catch(error => next(error));
+    }).then(post => {
+      request.logger.log(`Updated post ${post.id()}`);
+      response.redirect(`/posts/${post.id()}`);
+    }).catch(next);
 });
 
 app.delete('/posts/:id', (request, response, next) => {
   BlogPost.findOne({ _id: new ObjectId(request.params.id) })
     .then(post => post.delete())
-    .then(() => response.send('{ "redirect": "/blog" }'))
-    .catch((error) => next(error));
+    .then(post => {
+      request.logger.log(`Deleted post ${post.id()}`);
+      response.send('{ "redirect": "/blog" }');
+    }).catch((error) => next(error));
 });
 
 app.post('/posts', (request, response, next) => {
@@ -195,8 +221,9 @@ app.post('/posts', (request, response, next) => {
 
   let post = new BlogPost({ title: title, body: body });
   post.save().then(post => {
+    request.logger.log(`Created new post ${post.id()}`);
     response.redirect(`/posts/${post.id()}`);
-  }).catch(error => next(error));
+  }).catch(next);
 });
 
 webpack({
@@ -218,11 +245,11 @@ webpack({
     ]
   }
 }, function(error, stats) {
-  if (error) return console.log(error);
+  if (error) return logger.error(error);
 
   let jsonStats = stats.toJson();
-  if (jsonStats.errors.length > 0) return console.log(jsonStats.errors);
-  if (jsonStats.warnings.length > 0) console.log(jsonStats.warnings);
+  if (jsonStats.errors.length > 0) return logger.log(jsonStats.errors);
+  if (jsonStats.warnings.length > 0) logger.log(jsonStats.warnings);
 });
 app.use('/assets/javascripts', express.static(path.join(__dirname, 'tmp', 'public', 'javascripts')));
 
@@ -235,8 +262,7 @@ app.use((request, response, next) => {
 // Show full error message in development
 if (env.debug === true) {
   app.use((err, request, response, next) => {
-    console.log(err.message);
-    console.log(err.stack);
+    request.logger.error(err);
     let status = err.status || 500;
     response.status(status);
     response.render('error', {
@@ -249,8 +275,7 @@ if (env.debug === true) {
 
 // Only show error messages in production
 app.use((err, request, response, next) => {
-  console.log(err.message);
-  console.log(err.stack);
+  request.logger.error(err);
   let status = err.status || 500;
   response.status(status);
   response.render('error', {
@@ -270,11 +295,11 @@ function onError(error) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+      logger.log(bind + ' requires elevated privileges');
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+      logger.log(bind + ' is already in use');
       process.exit(1);
       break;
     default:
@@ -283,5 +308,5 @@ function onError(error) {
 }
 
 app.listen(env.port, () => {
-  console.log(`Listening on ${env.port}`);
+  logger.log(`Listening on ${env.port}`);
 });

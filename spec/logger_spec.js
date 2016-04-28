@@ -78,4 +78,70 @@ describe("Logger", () => {
       expect(messages[2].chunk).toEqual("\n");
     });
   });
+
+  describe("#tagged", () => {
+    it("returns a logger that tags messages with the given information", () => {
+      let tag = 'ip: 127.0.0.1';
+      let taggedLogger = this.logger.tagged(tag);
+      taggedLogger.log('a message');
+
+      let messages = this.stdout.messages();
+      expect(messages.length).toBe(2);
+
+      expect(messages[0].chunk).toContain(`[${tag}]`);
+
+      taggedLogger.error({ stack: 'a stack' });
+
+      messages = this.stderr.messages();
+      expect(messages.length).toBe(3);
+
+      expect(messages[0].chunk).toContain(`[${tag}]`);
+    });
+
+    it("adds more tags on subsequent calls", () => {
+      let tag1 = 'ip: 127.0.0.1';
+      let tag2 = 'userId: 1234';
+      let taggedLogger = this.logger.tagged(tag1).tagged(tag2);
+      taggedLogger.log('a message');
+
+      let messages = this.stdout.messages();
+      expect(messages.length).toBe(2);
+
+      expect(messages[0].chunk).toContain(`[${tag1}]`);
+      expect(messages[0].chunk).toContain(`[${tag2}]`);
+
+      taggedLogger.error({ stack: 'a stack' });
+
+      messages = this.stderr.messages();
+      expect(messages.length).toBe(3);
+
+      expect(messages[0].chunk).toContain(`[${tag1}]`);
+      expect(messages[0].chunk).toContain(`[${tag2}]`);
+    });
+  });
+
+  describe('#addTag', () => {
+    it("adds a tag to the log messages", () => {
+      let tag1 = 'abc: def';
+      let tag2 = 'userId: 4321';
+      this.logger.addTag(tag1);
+      this.logger.addTag(tag2);
+
+      this.logger.log('a message');
+
+      let messages = this.stdout.messages();
+      expect(messages.length).toBe(2);
+
+      expect(messages[0].chunk).toContain(`[${tag1}]`);
+      expect(messages[0].chunk).toContain(`[${tag2}]`);
+
+      this.logger.error({ stack: 'a stack' });
+
+      messages = this.stderr.messages();
+      expect(messages.length).toBe(3);
+
+      expect(messages[0].chunk).toContain(`[${tag1}]`);
+      expect(messages[0].chunk).toContain(`[${tag2}]`);
+    });
+  });
 });

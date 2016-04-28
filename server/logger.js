@@ -1,20 +1,40 @@
 "use strict";
 
 module.exports = class Logger {
-  constructor(outStream, errorStream) {
+  constructor(outStream, errorStream, additionalTags) {
     this._outStream = outStream;
     this._errorStream = errorStream;
+    this._additionalTags = additionalTags;
   }
 
-  log(messageObject) {
-    this.outStream().write(`[${this._timestamp()}] ${messageObject}`);
+  log(message) {
+    this.outStream().write(`${this.tags()} ${message}`);
     this.outStream().write("\n");
   }
 
   error(error) {
-    this.errorStream().write(`[${this._timestamp()}]`);
+    this.errorStream().write(this.tags());
     this.errorStream().write(error.stack);
     this.errorStream().write("\n");
+  }
+
+  tagged(additionalTag) {
+    return new Logger(this.outStream(), this.errorStream(), this.additionalTags().concat(additionalTag));
+  }
+
+  addTag(tag) {
+    this.additionalTags().push(tag);
+  }
+
+  additionalTags() {
+    if (!this._additionalTags) {
+      this._additionalTags = [];
+    }
+    return this._additionalTags;
+  }
+
+  tags() {
+    return [this._timestamp()].concat(this.additionalTags()).map(tag => `[${tag}]`).join(' ');
   }
 
   outStream() {
