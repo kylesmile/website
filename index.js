@@ -126,6 +126,7 @@ app.post('/sessions', (request, response, next) => {
       request.logger.log(`Successfully signed in as ${request.body.email}`);
       return new Session({ userId: userId, relevantData: request.ip }).save();
     } else if (!response.headersSent) {
+      request.logger.log(`Failed sign in as ${request.body.email}`);
       response.render('sign_in');
     }
   }).then(session => {
