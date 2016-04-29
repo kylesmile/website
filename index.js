@@ -20,6 +20,8 @@ const BlogPost = require('./server/blog_post');
 const User = require('./server/user');
 const Session = require('./server/session');
 
+require('./server/scheduled_tasks');
+
 User.collection().then(collection => {
   return collection.count();
 }).then(count => {
