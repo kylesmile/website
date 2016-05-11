@@ -1,9 +1,0 @@
-{
-  "esversion": 6,
-  "undef": true,
-  "node": true,
-  "browser": true,
-  "loopfunc": true,
-  "asi": true,
-  "jasmine": true
-}

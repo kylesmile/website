@@ -110,7 +110,11 @@ app.use('/assets/images', express.static(path.join(__dirname, 'client', 'images'
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/', (request, response) => response.render('home'));
+app.get('/', (request, response, next) => {
+  BlogPost.latestPosts().then(posts => {
+    response.render('home', { latestPosts: posts });
+  }).catch(next);
+});
 
 app.get('/sign_in', (request, response) => response.render('sign_in'));
 app.post('/sessions', (request, response, next) => {
@@ -177,7 +181,7 @@ app.post('/account', (request, response, next) => {
 app.get('/about', (request, response) => response.render('about'));
 
 app.get('/blog', (request, response, next) => {
-  BlogPost.find()
+  BlogPost.allPosts()
     .then(posts => response.render('blog', { posts: posts }))
     .catch(next);
 });

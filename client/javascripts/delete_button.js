@@ -7,7 +7,8 @@ export default class DeleteButton extends SingleElementComponent {
   }
 
   connect() {
-    this.element().addEventListener('click', () => {
+    this.element().addEventListener('click', event => {
+      event.preventDefault();
       new PromisedRequest(this.url(), 'DELETE').perform().then(response => {
         window.location = JSON.parse(response).redirect;
       });

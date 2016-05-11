@@ -2,8 +2,13 @@ extends ../layout.pug
 
 block content
   section.post-form
-    h1 Edit Post
     form(action="/posts/"+post.id() method="post")
-      input(type="text" name="title" value=post.title())
-      textarea(name="body")= post.body()
-      button(type="submit") Update
+      .form-group
+        h1 Edit Post
+      .form-group
+        input#post-title(type="text" name="title" placeholder="Title" value=post.title())
+      .form-group
+        textarea#post-body.code-field(name="body" placeholder="Body (Pug)")= post.body()
+      .form-actions
+        button.danger.delete(data-resource="/posts/" + post.id()) Delete
+        button(type="submit") Save

@@ -1,19 +1,73 @@
-.post-form {
-  input, textarea {
-    width: 100%;
-    display: block;
-    margin: 1rem 0;
-  }
-
+.post-form .form-group {
   input {
     font-size: 1.5em;
   }
 
   textarea {
     height: 20em;
+    font-size: 1em;
   }
+}
+
+.code-field {
+  font-family: monospace;
 }
 
 .edit-post {
   font-size: 0.75em;
+}
+
+a.button {
+  text-decoration: none;
+  background-image: linear-gradient(180deg, #5986c4, #537db6);
+  color: #f5f5f5;
+  border-radius: 3px;
+  border: none;
+  border-bottom: 3px solid #496ea1;
+  font-size: 0.9em;
+  padding: 0.25em 0.5em;
+  box-shadow: 0 2px 5px #eee;
+  margin-right: 0.25em;
+
+  -webkit-tap-highlight-color: rgba(0,0,0,0); // Disables gray highlight on iOS
+
+  &:active {
+    background-image: linear-gradient(180deg, #537db6, #5078af);
+    border-bottom-color: #5078af
+  }
+}
+
+article {
+  line-height: 1.7em;
+  margin: 2em 0;
+  border-bottom: 1px solid #ddd;
+
+  &:last-child {
+    margin-bottom: 1em;
+    border-bottom: none;
+  }
+
+  &:first-child {
+    margin-top: 1em;
+  }
+
+  * {
+    margin: 1em 0;
+  }
+
+  .post-title {
+    display: block;
+    text-decoration: none;
+    color: black;
+    // padding-bottom: 1em;
+
+    h1 {
+      font-size: 2em;
+      font-weight: normal;
+    }
+
+    &:visited {
+      color: black;
+    }
+  }
 }

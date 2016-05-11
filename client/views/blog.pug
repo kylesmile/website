@@ -3,6 +3,6 @@ extends layout
 block content
   section.blog
     if currentUser
-      a.new-post(href="/posts/new") New Post
+      a.button.new-post(href="/posts/new") New Post
     each post in posts
       include posts/_post

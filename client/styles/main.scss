@@ -6,45 +6,24 @@ body {
 
 main {
   flex-grow: 1;
+  width: 100%;
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
   padding: 1em;
   padding-top: 6em;
-
-  h1 {
-    font-size: 1.5em;
-  }
 }
 
-article {
-  line-height: 2.2em;
-  margin: 2em 0;
-  border-bottom: 1px solid #ddd;
-
-  &:last-child {
-    margin-bottom: 1em;
-    border-bottom: none;
-  }
-
-  &:first-child {
-    margin-top: 1em;
-  }
-
-  p {
-    margin: 1em 0;
-  }
-}
-
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 1024px) {
   main {
+    width: auto;
     padding-top: 4em;
     margin-left: 0.5em;
     margin-right: 0.5em;
   }
 }
 
-@media screen and (max-width: 370px) {
+@media screen and (max-width: 420px) {
   main {
     padding-top: 3.7em;
   }

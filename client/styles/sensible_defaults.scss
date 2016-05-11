@@ -4,7 +4,7 @@
   -moz-box-sizing: border-box;
   box-sizing: border-box;
 
-  font-family: Sans-serif;
+  font-family: Helvetica, Sans-serif;
   margin: 0;
 }
 
@@ -14,4 +14,18 @@ label {
 
 input {
   display: block;
+}
+
+code {
+  white-space: pre;
+  font-family: monospace;
+  display: block;
+
+  color: #eee;
+  background-color: #333;
+
+  padding: 1em;
+  margin: 0.3em;
+
+  border-radius: 4px;
 }

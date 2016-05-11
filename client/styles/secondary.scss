@@ -1,15 +1,17 @@
 footer {
   width: 100%;
-  padding: 1em;
+  padding: 0.5em;
   background-color: #666;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 
   small {
+    display: inline-block;
     color: #ddd;
   }
 
   .session-actions {
-    float: right;
-
     a {
       color: #ddd;
       text-decoration: none;
@@ -22,6 +24,18 @@ footer {
       &:hover {
         color: #ccc;
       }
+    }
+  }
+}
+
+@media screen and (max-width: 420px) {
+  footer {
+    small {
+      font-size: 0.5em;
+    }
+
+    .session-actions {
+      font-size: 0.75em;
     }
   }
 }

@@ -7,7 +7,7 @@ header {
   background-color: #f5f5f5;
   border-bottom: 1px solid #ddd;
   width: 100%;
-  padding: 1em;
+  padding: 0.5em;
 }
 
 .me-image {
@@ -19,6 +19,8 @@ header {
 }
 
 .title {
+  padding-left: 0.25em;
+
   h1 {
     display: inline-block;
     vertical-align: middle;
@@ -43,7 +45,7 @@ nav {
   }
 }
 
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 1024px) {
   .me-image {
     height: 2em;
   }
@@ -57,7 +59,11 @@ nav {
   }
 }
 
-@media screen and (max-width: 370px) {
+@media screen and (max-width: 420px) {
+  header {
+    padding: 0.25em;
+  }
+
   .me-image {
     height: 1.7em;
   }

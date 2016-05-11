@@ -2,4 +2,9 @@ extends layout
 
 block content
   section.home
-    h1 Howdy! Welcome to my Website!
+    h2 Latest blog posts
+
+    ul
+      each post in latestPosts
+        li
+          a(href="/posts/" + post.id())= post.title()
