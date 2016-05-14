@@ -14,7 +14,6 @@
 - name: Install MongoDB
   apt:
     name: mongodb-org
-    update_cache: yes
     state: present
   become: yes
 
@@ -22,3 +21,4 @@
   service:
     name: mongod
     state: started
+  become: yes

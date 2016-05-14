@@ -1,0 +1,27 @@
+---
+- name: Create swapfile
+  command: fallocate -l 1G /swapfile
+  args:
+    creates: /swapfile
+  register: create_swapfile
+  become: yes
+
+- name: Set swapfile permissions
+  file:
+    path: /swapfile
+    mode: 0600
+  become: yes
+
+- name: Check swapfile type
+  command: file /swapfile
+  register: swapfile
+
+- name: Set up swapfile with system
+  command: mkswap /swapfile
+  when: create_swapfile.changed
+  become: yes
+
+- name: Enable swap
+  command: swapon /swapfile
+  when: create_swapfile.changed
+  become: yes

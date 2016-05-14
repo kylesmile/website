@@ -1,25 +1,4 @@
 ---
-- name: Install git
-  apt:
-    name: git
-    state: present
-    update_cache: yes
-  become: yes
-
-- name: Install build-essential
-  apt:
-    name: build-essential
-    state: present
-    update_cache: yes
-  become: yes
-
-- name: Install libkrb5-dev
-  apt:
-    name: libkrb5-dev
-    state: present
-    update_cache: yes
-  become: yes
-
 - name: Ensure web group exists
   group:
     name: web
@@ -50,28 +29,6 @@
   become: yes
   become_user: website
 
-- name: Install node-gyp
-  npm:
-    name: node-gyp
-    global: yes
-    state: present
-  become: yes
-
-- name: Run npm install
-  npm:
-    path: /srv/website
-    production: yes
-  become: yes
-  become_user: website
-
-- name: Configure the app
-  command: node configure.js '{"dbHost":"localhost", "dbPort":"27017", "dbName":"website", "defaultUserEmail":"{{ email }}", "defaultUserPassword":"{{ password }}"}'
-  args:
-    chdir: /srv/website
-    creates: /srv/website/config.production.js
-  become: yes
-  become_user: website
-
 - name: Create website log file
   file:
     path: /var/log/website.log
@@ -90,10 +47,33 @@
   command: initctl reload-configuration
   become: yes
 
+- name: Install node-gyp
+  npm:
+    name: node-gyp
+    global: yes
+    state: present
+    executable: /usr/local/bin/npm
+  become: yes
+
+- name: Run npm install
+  npm:
+    path: /srv/website
+    production: yes
+    executable: /usr/local/bin/npm
+  become: yes
+  become_user: website
+
+- name: Configure the app
+  command: node configure.js '{"dbHost":"localhost", "dbPort":"27017", "dbName":"website", "defaultUserEmail":"{{ email }}", "defaultUserPassword":"{{ password }}"}'
+  args:
+    chdir: /srv/website
+    creates: /srv/website/config.production.js
+  become: yes
+
 # NOTE: This does not run the server as root! The service command needs to be run as root.
 # The server will be run as the "website" user
 - name: Start website server
   service:
     name: website
-    state: restarted
+    state: started
   become: yes

@@ -2,6 +2,9 @@
 - hosts: vagrant
 
   roles:
+    - apt_update
+    - misc_dependencies
+    - memory_swap
     - db
     - nodejs
     - web
