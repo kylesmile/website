@@ -1,25 +1,19 @@
 ---
-- name: Import Node public key
-  apt_key:
-    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
-    state: present
+- name: Download node-build
+  git:
+    repo: https://github.com/nodenv/node-build.git
+    dest: /build/node-build
   become: yes
 
-- name: Set up Node deb apt repository
-  apt_repository:
-    repo: 'deb https://deb.nodesource.com/node_5.x trusty main'
-    state: present
+- name: Install node-build
+  command: ./install.sh
+  args:
+    chdir: /build/node-build
+    creates: /usr/local/bin/node-build
   become: yes
 
-- name: Set up Node deb-src apt repository
-  apt_repository:
-    repo: 'deb-src https://deb.nodesource.com/node_5.x trusty main'
-    state: present
-  become: yes
-
-- name: Install NodeJS
-  apt:
-    name: nodejs
-    state: present
-    update_cache: yes
+- name: Install Node 6.1.0
+  command: node-build 6.1.0 /usr/local
+  args:
+    creates: /usr/local/bin/node
   become: yes
