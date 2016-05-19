@@ -25,3 +25,10 @@
   command: swapon /swapfile
   when: create_swapfile.changed
   become: yes
+
+- name: Decrease swappiness
+  sysctl:
+    name: vm.swappiness
+    value: 1
+    state: present
+  become: yes
