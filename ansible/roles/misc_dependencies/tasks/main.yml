@@ -10,9 +10,3 @@
     name: build-essential
     state: present
   become: yes
-
-- name: Install libkrb5-dev
-  apt:
-    name: libkrb5-dev
-    state: present
-  become: yes
