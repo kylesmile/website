@@ -75,5 +75,5 @@
 - name: Start website server
   service:
     name: website
-    state: started
+    state: restarted
   become: yes
