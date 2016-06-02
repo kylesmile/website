@@ -45,10 +45,15 @@ User.collection().then(collection => {
 
 const app = express();
 
+app.use((request, response, next) => {
+  response.locals.ip = request.get('X-Forwarded-For') || request.ip;
+  next();
+});
+
 app.use(cookieParser(env.sessionSecret));
 
 app.use((request, response, next) => {
-  request.logger = logger.tagged(request.ip);
+  request.logger = logger.tagged(response.locals.ip);
   next();
 });
 
@@ -67,7 +72,7 @@ app.use((request, response, next) => {
           next();
         }
       } else {
-        return new Session({ relevantData: request.ip }).save().then(session => {
+        return new Session({ relevantData: response.locals.ip }).save().then(session => {
           response.cookie('sessionToken', session.token(), { maxAge: env.sessionExpiration, signed: true });
           response.locals.currentSession = session;
           next();
@@ -75,7 +80,7 @@ app.use((request, response, next) => {
       }
     }).catch(next);
   } else {
-    new Session({ relevantData: request.ip }).save().then(session => {
+    new Session({ relevantData: response.locals.ip }).save().then(session => {
       response.cookie('sessionToken', session.token(), { maxAge: env.sessionExpiration, signed: true });
       response.locals.currentSession = session;
       next();
@@ -130,7 +135,7 @@ app.post('/sessions', (request, response, next) => {
   }).then(isCorrectPassword => {
     if (isCorrectPassword) {
       request.logger.log(`Successfully signed in as ${request.body.email}`);
-      return new Session({ userId: userId, relevantData: request.ip }).save();
+      return new Session({ userId: userId, relevantData: response.locals.ip }).save();
     } else if (!response.headersSent) {
       request.logger.log(`Failed sign in as ${request.body.email}`);
       response.render('sign_in');
