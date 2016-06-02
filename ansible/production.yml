@@ -1,0 +1,16 @@
+---
+- hosts: production
+
+  roles:
+    - apt_update
+    - misc_dependencies
+    - memory_swap
+    - db
+    - nodejs
+    - web
+
+  environment:
+    NODE_ENV: production
+
+  vars_files:
+    - variables/secrets.yml
