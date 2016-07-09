@@ -56,15 +56,10 @@ article {
   }
 
   .post-title {
+    margin-top: 0;
     display: block;
     text-decoration: none;
     color: black;
-    // padding-bottom: 1em;
-
-    h1 {
-      font-size: 2em;
-      font-weight: normal;
-    }
 
     &:visited {
       color: black;

@@ -1,0 +1,10 @@
+.me-image {
+  float: left;
+  margin: 0;
+  margin-right: 1em;
+  height: 150px;
+
+  @media screen and (max-width: 420px) {
+    height: 100px;
+  }
+}

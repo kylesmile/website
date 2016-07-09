@@ -1,12 +1,13 @@
 extends layout
 
 block content
-  form.sign_in(action="/sessions" method="post")
-    .form-group
-      label(for="login-email") Email
-      input#login-email(type="email" name="email")
-    .form-group
-      label(for="login-password") Password
-      input#login-password(type="password" name="password")
-    .form-actions
-      button(type="submit" ontouchstart="") Sign in
+  section.sign_in
+    form.sign_in(action="/sessions" method="post")
+      .form-group
+        label(for="login-email") Email
+        input#login-email(type="email" name="email")
+      .form-group
+        label(for="login-password") Password
+        input#login-password(type="password" name="password")
+      .form-actions
+        button(type="submit" ontouchstart="") Sign in
