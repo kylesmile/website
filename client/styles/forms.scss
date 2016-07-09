@@ -31,7 +31,7 @@ form {
   display: flex;
   justify-content: space-between;
 
-  button {
+  button, input[type="submit"] {
     width: 100%;
     background-image: linear-gradient(180deg, #5986c4, #537db6);
     color: #f5f5f5;
