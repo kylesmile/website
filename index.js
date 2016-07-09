@@ -46,7 +46,9 @@ User.collection().then(collection => {
 const app = express();
 
 app.use((request, response, next) => {
-  response.locals.currentYear = new Date().getFullYear();
+  let startYear = 2016;
+  let currentYear = new Date().getFullYear();
+  response.locals.copyrightRange = startYear === currentYear ? currentYear : `${startYear}–${currentYear}`;
   response.locals.ip = request.get('X-Forwarded-For') || request.ip;
   next();
 });
