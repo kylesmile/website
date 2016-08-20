@@ -42,6 +42,10 @@ article {
   margin: 2em 0;
   border-bottom: 1px solid #ddd;
 
+  li {
+    margin: 0.2em 0;
+  }
+
   &:last-child {
     margin-bottom: 1em;
     border-bottom: none;
