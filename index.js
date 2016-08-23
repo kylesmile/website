@@ -50,7 +50,8 @@ app.use((request, response, next) => {
   let currentYear = new Date().getFullYear();
   response.locals.copyrightRange = startYear === currentYear ? currentYear : `${startYear}–${currentYear}`;
   response.locals.ip = request.get('X-Forwarded-For') || request.ip;
-  response.locals.contextualTitle = "KyleCoding.com"
+  response.locals.contextualTitle = "KyleCoding.com";
+  response.locals.metaDescription = "";
   next();
 });
 
@@ -208,7 +209,11 @@ app.get('/posts/:id/edit', (request, response, next) => {
 app.get('/posts/:id', (request, response, next) => {
   BlogPost.findOne({ _id: new ObjectId(request.params.id) })
     .then(post => {
-      response.locals.contextualTitle += ` | ${post.title()}`
+      response.locals.contextualTitle += ` | ${post.title()}`;
+      let postDescription = post.parsedBody().replace(/<\\?\w+>/g, '');
+      postDescription = postDescription.split(' ').slice(0, 25).join(' ');
+      if (postDescription.match(/\w$/)) postDescription += "…";
+      response.locals.metaDescription = postDescription;
       response.render('posts/show', { post: post });
     }).catch(next);
 });
